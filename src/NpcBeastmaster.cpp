@@ -1082,7 +1082,44 @@ public:
   BeastmasterLoginNotice_PlayerScript()
       : PlayerScript("BeastmasterLoginNotice_PlayerScript") {}
 
-  void OnLogin(Player *player) {
+  void OnLogin(Player *player) override {
+    if (sConfigMgr->GetOption<bool>("BeastMaster.Enable", true)) {
+      // Fix for non-hunters losing pet spells on login due to core spell validation
+      if (player->getClass() != CLASS_HUNTER) {
+        QueryResult res = CharacterDatabase.Query(
+            "SELECT 1 FROM character_pet WHERE owner = {}", player->GetGUID().GetCounter());
+        
+        bool trackTamed = sConfigMgr->GetOption<bool>("BeastMaster.TrackTamedPets", false);
+        QueryResult res2;
+        if (trackTamed) {
+            res2 = CharacterDatabase.Query(
+                "SELECT 1 FROM beastmaster_tamed_pets WHERE owner_guid = {}", player->GetGUID().GetCounter());
+        }
+
+        if (res || res2) {
+            // Delete from DB to prevent duplicate key errors on save. The core marked these as 
+            // removed in-memory during load but hasn't deleted them from the DB yet.
+            CharacterDatabase.Execute(
+                "DELETE FROM character_spell WHERE guid = {} AND spell IN "
+                "(883, 982, 2641, 6991, 48990, 1002, 1462, 6197, 53270)",
+                player->GetGUID().GetCounter());
+
+            for (uint32 spell : HunterSpells) {
+                if (!player->HasSpell(spell)) {
+                    player->learnSpell(spell, false);
+                }
+            }
+
+            if (sConfigMgr->GetOption<bool>("BeastMaster.AllowExotic", false) || 
+                player->HasTalent(PET_SPELL_BEAST_MASTERY, player->GetActiveSpec())) {
+                if (!player->HasSpell(PET_SPELL_BEAST_MASTERY)) {
+                    player->learnSpell(PET_SPELL_BEAST_MASTERY, false);
+                }
+            }
+        }
+      }
+    }
+
     if (!sConfigMgr->GetOption<bool>("BeastMaster.ShowLoginNotice", true))
       return;
 
