@@ -97,6 +97,7 @@ enum PetGossip {
   PET_PAGE_START_RARE_PETS = 701,
   PET_PAGE_START_RARE_EXOTIC_PETS = 801,
   PET_PAGE_MAX = 901,
+  PET_CREATE_OFFSET = 100000,
   PET_MAIN_MENU = 50,
   PET_REMOVE_SKILLS = 80,
   PET_GOSSIP_HELLO = 601026,
@@ -657,7 +658,7 @@ void NpcBeastmaster::GossipSelect(Player *player, Creature *creature,
     return;
   }
 
-  if (action >= PET_PAGE_MAX)
+  if (action >= PET_CREATE_OFFSET)
     CreatePet(player, creature, action);
 }
 
@@ -666,7 +667,7 @@ void NpcBeastmaster::CreatePet(Player *player, Creature *creature,
   if (!sConfigMgr->GetOption<bool>("BeastMaster.Enable", true))
     return;
 
-  uint32 petEntry = action - PET_PAGE_MAX;
+  uint32 petEntry = action - PET_CREATE_OFFSET;
   const PetInfo *info = FindPetInfo(petEntry);
 
   if (player->IsExistPet()) {
@@ -763,7 +764,7 @@ void NpcBeastmaster::AddPetsToGossip(Player *player,
                          0); // 0 = no action
       } else {
         AddGossipItemFor(player, pet.icon, pet.name, GOSSIP_SENDER_MAIN,
-                         pet.entry + PET_PAGE_MAX);
+                         pet.entry + PET_CREATE_OFFSET);
       }
     }
     count++;
