@@ -1080,9 +1080,9 @@ bool BeastMaster_CommandScript::HandleBeastmasterCommand(
 class BeastmasterLoginNotice_PlayerScript : public PlayerScript {
 public:
   BeastmasterLoginNotice_PlayerScript()
-      : PlayerScript("BeastmasterLoginNotice_PlayerScript") {}
+      : PlayerScript("BeastmasterLoginNotice_PlayerScript", {PLAYERHOOK_ON_LOGIN}) {}
 
-  void OnLogin(Player *player) override {
+  void OnPlayerLogin(Player *player) override {
     if (sConfigMgr->GetOption<bool>("BeastMaster.Enable", true)) {
       // Fix for non-hunters losing pet spells on login due to core spell validation
       if (player->getClass() != CLASS_HUNTER) {
